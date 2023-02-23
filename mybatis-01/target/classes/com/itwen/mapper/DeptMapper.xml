@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itwen.mapper.DeptMapper">
+
+
+    <resultMap id="deptResultMap" type="dept">
+        <result column="dept_id" property="deptId"/>
+        <result column="dept_name" property="name"/>
+    </resultMap>
+    <select id="selectAll" resultMap="deptResultMap">
+        select *
+        from t_dept;
+    </select>
+
+
+    <select id="getEmpAndDeptStepTwo" resultMap="deptResultMap">
+        select *
+        from t_dept
+        where dept_id = #{deptId};
+    </select>
+
+
+    <!--处理一对多
+    一个部门可以对应多个员工
+    1. collection
+    2. 分步查询
+    -->
+    <!--collection-->
+    <resultMap id="DeptAndEmpResultMapOne" type="dept">
+        <id column="dept_id" property="deptId"/>
+        <result column="dept_name" property="name"/>
+        <collection property="emps"
+                    ofType="emp">
+            <id column="emp_id" property="empId"/>
+            <result column="name" property="name"/>
+            <result column="gender" property="gender"/>
+            <result column="age" property="age"/>
+        </collection>
+    </resultMap>
+    <select id="getDeptAndEmpByDeptId" resultMap="DeptAndEmpResultMapOne">
+        select *
+        from t_dept
+                 left join t_emp on t_emp.dept_id = t_dept.dept_id
+        where t_dept.dept_id = #{deptId}
+    </select>
+
+    <!--分布查询第一步-->
+    <resultMap id="getDeptAndEmpStepOneMap" type="dept">
+        <id column="dept_id" property="deptId"/>
+        <result column="dept_name" property="name"/>
+        <collection property="emps"
+                    select="com.itwen.mapper.EmpMapper.getDeptAndEmpStepTwo"
+                    column="dept_id">
+        </collection>
+    </resultMap>
+    <!--第一步只需要查出所有部门-->
+    <select id="getDeptAndEmpStepOne" resultMap="getDeptAndEmpStepOneMap">
+        select * from t_dept where dept_id = #{deptId}
+    </select>
+
+
+
+
+</mapper>

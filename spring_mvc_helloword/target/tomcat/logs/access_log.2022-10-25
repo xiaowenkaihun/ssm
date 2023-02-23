@@ -1,0 +1,5 @@
+0:0:0:0:0:0:0:1 - - [25/Oct/2022:16:42:43 +0800] "GET /spring_mvc_helloword HTTP/1.1" 302 - http-bio-8080-exec-1 0
+0:0:0:0:0:0:0:1 - - [25/Oct/2022:16:42:44 +0800] "GET /spring_mvc_helloword/ HTTP/1.1" 500 10591 http-bio-8080-exec-3 217
+0:0:0:0:0:0:0:1 - - [25/Oct/2022:16:52:31 +0800] "GET /spring_mvc_helloword HTTP/1.1" 302 - http-bio-8080-exec-1 0
+0:0:0:0:0:0:0:1 - - [25/Oct/2022:16:52:31 +0800] "GET /spring_mvc_helloword/ HTTP/1.1" 200 264 http-bio-8080-exec-3 271
+0:0:0:0:0:0:0:1 - - [25/Oct/2022:16:52:33 +0800] "GET /spring_mvc_helloword/hello HTTP/1.1" 200 161 http-bio-8080-exec-4 3

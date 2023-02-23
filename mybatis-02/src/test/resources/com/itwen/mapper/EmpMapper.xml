@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itwen.mapper.EmpMapper">
+    <!--
+        字段名和属性名不一致的情况，如何处理映射关系
+        1、为查询的字段设置别名，和属性名保持一致
+        2、当字段符合MySQL的要求使用_，而属性符合java的要求使用驼峰
+        此时可以在MyBatis的核心配置文件中设置一个全局配置，可以自动将下划线映射为驼峰
+        emp_id:empId,emp_name:empName
+        3、使用resultMap自定义映射处理
+        处理多对一的映射关系：
+        1、级联方式处理
+        2、association
+        3、分步查询
+
+        处理一对多的映射关系：
+        1、collection
+        2、分步查询
+    -->
+
+    <!--
+        resultMap：设置自定义的映射关系
+        id：唯一标识
+        type：处理映射关系的实体类的类型
+        常用的标签：
+        id：处理主键和实体类中属性的映射关系
+        result：处理普通字段和实体类中属性的映射关系
+        association：处理多对一的映射关系（处理实体类类型的属性）
+        collection：处理一对多的映射关系（处理集合类型的属性）
+        column：设置映射关系中的字段名，必须是sql查询出的某个字段
+        property：设置映射关系中的属性的属性名，必须是处理的实体类类型中的属性名
+    -->
+    <resultMap id="empAndDeptResultMapOne" type="emp">
+        <id column="emp_id" property="empId"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <result column="dept_id" property="dept.deptId"/>
+        <!--如果出现两个表中有相同的字段名，可以加上表名进行区别-->
+        <result column="t_dept.dept_name" property="dept.name"/>
+    </resultMap>
+
+    <resultMap id="empResultMap" type="emp">
+        <id column="emp_id" property="empId"/>
+    </resultMap>
+
+    <resultMap id="empAndDeptResultMapTwo" type="emp">
+        <id column="emp_id" property="empId"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <association property="dept" javaType="dept">
+            <id column="dept_id" property="deptId"/>
+            <result column="dept_name" property="name"/>
+        </association>
+    </resultMap>
+
+    <!--
+    1. select是执行下一个sql的唯一标识
+
+    2. column 是执行下一个sql的条件
+
+    -->
+    <resultMap id="empAndDeptByStepResultMap" type="emp">
+        <id column="emp_id" property="empId"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <!--fetchType在我们开启了延迟加载的环境当中，
+        通过该配置可以修改是否使用延迟加载
+        eager立即加载
+        lazy延迟加载
+        开了延迟之后在执行就会执行到需要的sql-->
+        <association property="dept"
+                     fetchType="lazy"
+                     select="com.com.itwen.mapper.DeptMapper.getEmpAndDeptStepTwo"
+                     column="dept_id">
+        </association>
+    </resultMap>
+    <insert id="insertMoreEmp">
+        /*insert into t_emp values (),(),()*/
+        insert into t_emp values
+        <foreach collection="emps" item="emp" separator=",">
+            (null,#{emp.name}, #{emp.age},#{emp.gender},null)
+        </foreach>
+    </insert>
+    <delete id="deleteMoreEmp">
+        delete from t_emp where emp_id in (
+        <foreach collection="ids" item="id" separator=",">
+            #{id}
+        </foreach>
+            )
+
+    </delete>
+
+    <select id="selectEmpById" resultMap="empAndDeptResultMapTwo">
+        select *
+        from t_emp
+                 left join t_dept on t_emp.dept_id = t_dept.dept_id
+        where emp_id = #{empId}
+    </select>
+
+    <select id="selectEmpByIdStepOne" resultMap="empAndDeptByStepResultMap">
+        select * from t_emp where emp_id = #{empId}
+    </select>
+
+
+    <select id="getDeptAndEmpStepTwo" resultMap="empResultMap">
+        select * from t_emp where dept_id=#{deptId}
+    </select>
+
+
+
+    <select id="selectByCondition" resultMap="empAndDeptResultMapTwo">
+        /*where 标签使用*/
+        <!--select * from t_emp
+        <where>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+            <if test="gender != null and gender != ''">
+                and gender = #{gender}
+            </if>
+            <if test="age != null and age != ''">
+                and age = #{age}
+            </if>
+            <if test="deptId != null and deptId != ''">
+                and dept_id = #{deptId}
+            </if>
+        </where>-->
+            /*
+        rim用于去掉或添加标签中的内容 常用属性：
+        prefix：在trim标签中的内容的前面添加某些内容
+        prefixOverrides：在trim标签中的内容的前面去掉某些内容
+        suffix：在trim标签中的内容的后面添加某些内容
+        suffixOverrides：在trim标签中的内容的后面去掉某些内容*/
+            select * from t_emp
+            <trim prefix="where" suffixOverrides="and">
+                <if test="name != null and name != ''">
+                    name = #{name}
+                </if>
+                <if test="gender != null and gender != ''">
+                    gender = #{gender}
+                </if>
+                <if test="age != null and age != ''">
+                    age = #{age}
+                </if>
+                <if test="deptId != null and deptId != ''">
+                    dept_id = #{deptId}
+                </if>
+            </trim>
+
+    </select>
+    <select id="selectByConditionTwo" resultType="emp">
+        select * from t_emp
+        <where>
+            /*相当于java当中的if else*/
+            <choose>
+                <when test="name != null and name != ''">
+                    name = #{name}
+                </when>
+                <when test="gender != null and gender != ''">
+                    gender = #{gender}
+                </when>
+                <when test="age != null and age != ''">
+                    age = #{age}
+                </when>
+                <when test="deptId != null and deptId != ''">
+                    dept_id = #{deptId}
+                </when>
+            </choose>
+        </where>
+    </select>
+
+
+</mapper>

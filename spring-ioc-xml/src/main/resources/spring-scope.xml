@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--
+     * singleton:表示获取bean所对应的对象是同一个
+     * prototype:表示获取的bean所对应的对象都是新的对象
+     -->
+
+    <bean id="student" class="com.itwen.pojo.Student" scope="prototype" >
+        <property name="sid" value="10022"/>
+        <property name="sname" value="马云"/>
+    </bean>
+
+
+</beans>
